@@ -1,0 +1,39 @@
+{
+  "name": "election-yatra",
+  "version": "0.5.1",
+  "private": true,
+  "description": "Election Yatra — Janta ka Election Saathi. An India-first civic education assistant powered by Gemini and Google Cloud.",
+  "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "dev": "pnpm -r --parallel --filter=\"./apps/*\" dev",
+    "dev:web": "pnpm --filter @yatra/web dev",
+    "dev:api": "pnpm --filter @yatra/functions dev",
+    "build": "pnpm -r build",
+    "test": "pnpm --filter @yatra/core build && pnpm -r test",
+    "test:unit": "pnpm --filter @yatra/core build && pnpm --filter @yatra/core test && pnpm --filter @yatra/web test",
+    "test:api": "pnpm --filter @yatra/core build && pnpm --filter @yatra/functions test",
+    "test:web": "pnpm --filter @yatra/web test",
+    "test:all": "pnpm type-check && pnpm test && pnpm build && pnpm e2e:ci && pnpm a11y",
+    "e2e": "playwright test",
+    "e2e:ci": "playwright test --project=chromium",
+    "e2e:headed": "playwright test --headed",
+    "a11y": "playwright test e2e/a11y.spec.ts --project=chromium",
+    "lint": "pnpm -r lint",
+    "type-check": "pnpm --filter @yatra/core build && pnpm -r type-check",
+    "clean": "pnpm -r exec rm -rf dist .next node_modules"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.11.3",
+    "@playwright/test": "^1.59.1",
+    "@types/node": "^20.12.7",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "eslint": "^8.57.0",
+    "prettier": "^3.2.5",
+    "typescript": "^5.4.5",
+    "vitest": "^1.6.0"
+  }
+}

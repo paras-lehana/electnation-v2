@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+*.tsbuildinfo
+
+# Env & secrets
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+service-account*.json
+!service-account.example.json
+
+# Private design / research docs (NOT shipped in repo)
+docs/
+
+# Tool caches and local metadata
+.DS_Store
+.idea/
+*.swp
+*.swo
+
+# Test & coverage
+coverage/
+.nyc_output/
+playwright-report/
+test-results/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# PWA
+public/sw.js
+public/workbox-*.js

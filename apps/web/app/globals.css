@@ -1,0 +1,78 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-khadi-50 text-ink-900 font-sans antialiased;
+    background-image:
+      radial-gradient(circle at 10% 0%, rgba(255, 153, 51, 0.10) 0%, transparent 40%),
+      radial-gradient(circle at 90% 100%, rgba(19, 136, 8, 0.08) 0%, transparent 45%);
+  }
+  h1, h2, h3 {
+    @apply font-display tracking-tight;
+  }
+  .devanagari {
+    @apply font-devanagari;
+  }
+  :focus-visible {
+    outline: 3px solid theme(colors.indigo-chakra.DEFAULT);
+    outline-offset: 3px;
+    border-radius: 6px;
+  }
+}
+
+@layer components {
+  .container-yatra {
+    @apply mx-auto w-full max-w-6xl px-5 sm:px-8;
+  }
+  .tricolor-divider {
+    background: linear-gradient(
+      90deg,
+      theme(colors.saffron.500) 0 33%,
+      #ffffff 33% 66%,
+      theme(colors.leaf.500) 66% 100%
+    );
+    @apply h-1 w-full;
+  }
+  .paisley-corner::before {
+    content: '';
+    @apply absolute -left-2 -top-2 h-6 w-6 rounded-full bg-marigold-400/60 blur-[1px];
+  }
+  .paisley-corner::after {
+    content: '';
+    @apply absolute -right-3 -bottom-3 h-8 w-8 rounded-full border-2 border-henna-500/30;
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

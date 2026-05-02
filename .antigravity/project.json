@@ -1,0 +1,17 @@
+{
+  "builder": "antigravity",
+  "template": "nextjs-google-stack",
+  "version": "1.0.0",
+  "createdWith": "Google Antigravity",
+  "project": "election-yatra",
+  "stack": [
+    "nextjs-14",
+    "typescript",
+    "tailwindcss",
+    "gemini-vertex-ai",
+    "firebase",
+    "google-maps",
+    "google-calendar",
+    "cloud-run"
+  ]
+}

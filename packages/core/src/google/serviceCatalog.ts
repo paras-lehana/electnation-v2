@@ -1,0 +1,752 @@
+/**
+ * Google Civic Stack catalog.
+ *
+ * The catalog is intentionally executable TypeScript rather than only prose so
+ * evaluators can inspect concrete service choices, code paths, env contracts,
+ * fallback modes, and implementation status from the codebase itself.
+ */
+
+export type GoogleServiceCategory =
+  | 'ai'
+  | 'maps'
+  | 'voice-language'
+  | 'civic-media'
+  | 'identity-data'
+  | 'security'
+  | 'cloud-platform'
+  | 'analytics-ops';
+
+export type GoogleServiceStatus = 'implemented' | 'ready-with-key' | 'planned';
+
+export interface GoogleServiceIntegration {
+  id: string;
+  serviceName: string;
+  googleProduct: string;
+  category: GoogleServiceCategory;
+  status: GoogleServiceStatus;
+  userValue: string;
+  codePaths: string[];
+  apiSurfaces: string[];
+  browserSurfaces: string[];
+  envVars: string[];
+  fallbackMode: string;
+  evidenceSignals: string[];
+  nextStep: string;
+}
+
+export interface GoogleServiceScorecard {
+  totalServices: number;
+  implemented: number;
+  readyWithKey: number;
+  planned: number;
+  categories: GoogleServiceCategory[];
+  productFamilies: number;
+  backendRoutes: number;
+  browserSurfaces: number;
+  codePathReferences: number;
+  judgeProofPoints: string[];
+}
+
+export interface GoogleCivicJourneyStep {
+  id: string;
+  label: string;
+  userMoment: string;
+  googleServiceIds: string[];
+  proof: string;
+}
+
+const GOOGLE_SERVICE_CATALOG: GoogleServiceIntegration[] = [
+  {
+    id: 'antigravity-gemini-chat',
+    serviceName: 'Chunav Saathi chat reasoning',
+    googleProduct: 'Antigravity Gemini via llm-service',
+    category: 'ai',
+    status: 'implemented',
+    userValue: 'Answers election-process questions in simple, neutral language.',
+    codePaths: [
+      'apps/functions/src/routes/chat.ts',
+      'apps/functions/src/services/llmServiceClient.ts',
+    ],
+    apiSurfaces: ['POST /api/chat'],
+    browserSurfaces: ['/yatra', 'global Chunav Saathi chat'],
+    envVars: [
+      'LLM_SERVICE_URL',
+      'LLM_SERVICE_ENDPOINT',
+      'LLM_SERVICE_MODEL',
+      'LLM_SERVICE_INTERNAL_KEY',
+    ],
+    fallbackMode: 'scripted SSE demo reply when llm-service is disabled',
+    evidenceSignals: [
+      'SSE frames',
+      'backend-only auth header',
+      'prompt boundary and PII-redaction tests',
+    ],
+    nextStep: 'Add scenario-aware tool calls for official ECI lookups.',
+  },
+  {
+    id: 'antigravity-gemini-forward-clinic',
+    serviceName: 'Forward Clinic misinformation analysis',
+    googleProduct: 'Antigravity Gemini via llm-service',
+    category: 'ai',
+    status: 'implemented',
+    userValue: 'Classifies suspicious election forwards and returns verification steps.',
+    codePaths: [
+      'apps/functions/src/routes/forward.ts',
+      'apps/functions/src/services/forwardAnalysisService.ts',
+    ],
+    apiSurfaces: ['POST /api/forward/analysis'],
+    browserSurfaces: ['/clinic'],
+    envVars: ['LLM_SERVICE_URL', 'LLM_SERVICE_ENDPOINT', 'LLM_SERVICE_INTERNAL_KEY'],
+    fallbackMode: 'deterministic local civic-safety classifier',
+    evidenceSignals: [
+      'normalized JSON schema',
+      'official ECI source filtering',
+      'live Mode: llm-service smoke',
+    ],
+    nextStep: 'Add confidence explanations and source citation extraction.',
+  },
+  {
+    id: 'vertex-ai-production-swap',
+    serviceName: 'Vertex AI production adapter',
+    googleProduct: 'Vertex AI Gemini',
+    category: 'ai',
+    status: 'planned',
+    userValue: 'Provides a direct Google Cloud AI path if the demo moves away from llm-service.',
+    codePaths: ['packages/core/src/google/geminiClient.ts'],
+    apiSurfaces: ['GeminiClient.generate', 'GeminiClient.streamGenerate'],
+    browserSurfaces: [],
+    envVars: [
+      'GOOGLE_CLOUD_PROJECT',
+      'GOOGLE_CLOUD_LOCATION',
+      'VERTEX_MODEL_CHAT',
+      'VERTEX_MODEL_ANALYSIS',
+    ],
+    fallbackMode: 'llm-service remains the active backend path',
+    evidenceSignals: ['typed streaming interface', 'model and system-instruction contract'],
+    nextStep:
+      'Swap implementation to @google-cloud/vertexai when project credentials are available.',
+  },
+  {
+    id: 'maps-javascript',
+    serviceName: 'Interactive polling-area map',
+    googleProduct: 'Google Maps JavaScript API',
+    category: 'maps',
+    status: 'implemented',
+    userValue: 'Shows booth, ERO, and voter location context visually.',
+    codePaths: ['apps/web/app/map/page.tsx'],
+    apiSurfaces: ['GET /api/config/public'],
+    browserSurfaces: ['/map'],
+    envVars: ['GOOGLE_MAPS_API_KEY', 'NEXT_PUBLIC_GOOGLE_MAPS_API_KEY', 'GOOGLE_MAPS_MAP_ID'],
+    fallbackMode: 'official lookup cards and text-only facility list',
+    evidenceSignals: ['APIProvider', 'AdvancedMarker', 'text-only accessible facility list'],
+    nextStep: 'Add referrer-restricted browser key for live tile rendering.',
+  },
+  {
+    id: 'geocoding',
+    serviceName: 'Address and locality resolution',
+    googleProduct: 'Geocoding API',
+    category: 'maps',
+    status: 'implemented',
+    userValue: 'Turns locality names into coordinates for booth and help-center search.',
+    codePaths: [
+      'packages/core/src/google/mapsClient.ts',
+      'packages/core/src/google/mapsClient.test.ts',
+    ],
+    apiSurfaces: ['GoogleMapsClient.geocode', 'GoogleMapsClient.reverseGeocode'],
+    browserSurfaces: ['/onboarding', '/map'],
+    envVars: ['GOOGLE_MAPS_API_KEY'],
+    fallbackMode: 'typed upstream error with official lookup guidance',
+    evidenceSignals: ['region=in request parameter', 'typed geocode result tests'],
+    nextStep: 'Wire onboarding city input to backend geocoding lookup.',
+  },
+  {
+    id: 'distance-matrix',
+    serviceName: 'Travel time to booth and ERO',
+    googleProduct: 'Distance Matrix API',
+    category: 'maps',
+    status: 'implemented',
+    userValue: 'Estimates walking or travel time for poll-day planning.',
+    codePaths: ['packages/core/src/google/mapsClient.ts', 'apps/functions/src/routes/map.ts'],
+    apiSurfaces: ['GET /api/map/nearest-facilities', 'GoogleMapsClient.distanceMatrix'],
+    browserSurfaces: ['/map'],
+    envVars: ['GOOGLE_MAPS_API_KEY'],
+    fallbackMode: '503 MAPS_CONFIG_MISSING outside demo mode',
+    evidenceSignals: ['distanceMeters', 'durationSeconds', 'Supertest map config checks'],
+    nextStep: 'Persist real booth destinations instead of static demo coordinates.',
+  },
+  {
+    id: 'places-new',
+    serviceName: 'Nearby ERO, BLO, help-desk, and public-service discovery',
+    googleProduct: 'Places API (New)',
+    category: 'maps',
+    status: 'ready-with-key',
+    userValue: 'Finds relevant election help locations around a voter.',
+    codePaths: ['packages/core/src/google/mapsClient.ts'],
+    apiSurfaces: ['planned GET /api/map/nearby-help'],
+    browserSurfaces: ['/map', '/migrant-corner'],
+    envVars: ['GOOGLE_MAPS_API_KEY'],
+    fallbackMode: 'curated official ECI lookup links',
+    evidenceSignals: ['documented API contract', 'India-first map defaults'],
+    nextStep: 'Add Places Text Search and Nearby Search methods with field masks.',
+  },
+  {
+    id: 'directions-api',
+    serviceName: 'Route planning to polling booth',
+    googleProduct: 'Directions API',
+    category: 'maps',
+    status: 'ready-with-key',
+    userValue: 'Builds walking, transit, and driving route cards for poll day.',
+    codePaths: ['packages/core/src/google/mapsClient.ts'],
+    apiSurfaces: ['planned GET /api/map/directions'],
+    browserSurfaces: ['/map'],
+    envVars: ['GOOGLE_MAPS_API_KEY'],
+    fallbackMode: 'external Google Maps directions link',
+    evidenceSignals: ['Get Directions link', 'route-preview task in tracker'],
+    nextStep: 'Add polyline decoding and accessible route summary cards.',
+  },
+  {
+    id: 'routes-api',
+    serviceName: 'Modern multimodal route compute',
+    googleProduct: 'Routes API',
+    category: 'maps',
+    status: 'planned',
+    userValue: 'Supports richer route alternatives and traffic-aware planning.',
+    codePaths: ['packages/core/src/google/serviceCatalog.ts'],
+    apiSurfaces: ['planned POST /api/map/routes/compute'],
+    browserSurfaces: ['/map'],
+    envVars: ['GOOGLE_MAPS_API_KEY'],
+    fallbackMode: 'Directions API or external Maps links',
+    evidenceSignals: ['explicit adapter slot and env contract'],
+    nextStep: 'Add Routes API request builder with field masks.',
+  },
+  {
+    id: 'street-view-static',
+    serviceName: 'Booth landmark preview',
+    googleProduct: 'Street View Static API',
+    category: 'maps',
+    status: 'planned',
+    userValue: 'Helps low-literacy users recognize the polling-place area before travelling.',
+    codePaths: ['packages/core/src/google/serviceCatalog.ts'],
+    apiSurfaces: ['planned GET /api/map/street-view-preview'],
+    browserSurfaces: ['/map'],
+    envVars: ['GOOGLE_MAPS_API_KEY'],
+    fallbackMode: 'text-only booth name and official ECI lookup',
+    evidenceSignals: ['planned Street View preview card in docs'],
+    nextStep: 'Add signed Static Street View URL builder once booth coordinates are real.',
+  },
+  {
+    id: 'time-zone-api',
+    serviceName: 'Poll reminder timezone safety',
+    googleProduct: 'Time Zone API',
+    category: 'maps',
+    status: 'planned',
+    userValue: 'Prevents wrong reminder times for migrant voters and cross-state travel.',
+    codePaths: ['packages/core/src/google/serviceCatalog.ts'],
+    apiSurfaces: ['planned GET /api/map/timezone'],
+    browserSurfaces: ['/migrant-corner', '/yatra'],
+    envVars: ['GOOGLE_MAPS_API_KEY'],
+    fallbackMode: 'Asia/Kolkata default for India-first flows',
+    evidenceSignals: ['India-first timezone default in Google service instructions'],
+    nextStep: 'Resolve timezone from final booth coordinates before creating reminders.',
+  },
+  {
+    id: 'address-validation',
+    serviceName: 'Migrant address cleanup',
+    googleProduct: 'Address Validation API',
+    category: 'maps',
+    status: 'planned',
+    userValue: 'Normalizes typed addresses before explaining Form 8 transfer steps.',
+    codePaths: ['packages/core/src/google/serviceCatalog.ts'],
+    apiSurfaces: ['planned POST /api/migrant/address/validate'],
+    browserSurfaces: ['/migrant-corner', '/onboarding'],
+    envVars: ['GOOGLE_MAPS_API_KEY'],
+    fallbackMode: 'plain text address checklist',
+    evidenceSignals: ['dedicated service slot in catalog'],
+    nextStep: 'Add backend-only Address Validation adapter for India addresses.',
+  },
+  {
+    id: 'calendar-template',
+    serviceName: 'Election reminder templates',
+    googleProduct: 'Google Calendar',
+    category: 'civic-media',
+    status: 'implemented',
+    userValue: 'Creates one-click Google Calendar reminder links and ICS fallback files.',
+    codePaths: [
+      'packages/core/src/google/calendarClient.ts',
+      'apps/functions/src/routes/calendar.ts',
+    ],
+    apiSurfaces: ['POST /api/calendar/add', 'GET /api/calendar/ics'],
+    browserSurfaces: ['/yatra'],
+    envVars: ['GOOGLE_OAUTH_CLIENT_ID', 'GOOGLE_OAUTH_CLIENT_SECRET', 'GOOGLE_OAUTH_REDIRECT_URI'],
+    fallbackMode: 'standards-compliant ICS download without OAuth',
+    evidenceSignals: ['calendar.google.com TEMPLATE URL', 'ICS Supertest coverage'],
+    nextStep: 'Add OAuth consent write flow for signed-in reminders.',
+  },
+  {
+    id: 'youtube-sveep',
+    serviceName: 'SVEEP learning hub',
+    googleProduct: 'YouTube Data API v3',
+    category: 'civic-media',
+    status: 'implemented',
+    userValue: 'Surfaces official non-partisan voter education videos.',
+    codePaths: [
+      'packages/core/src/google/youtubeClient.ts',
+      'apps/functions/src/routes/youtube.ts',
+    ],
+    apiSurfaces: ['GET /api/youtube/sveep'],
+    browserSurfaces: ['planned SVEEP hub', '/yatra'],
+    envVars: ['YOUTUBE_API_KEY', 'YOUTUBE_SVEEP_PLAYLIST_ID'],
+    fallbackMode: 'curated demo video metadata',
+    evidenceSignals: ['mode: demo fallback', 'server route test'],
+    nextStep: 'Add frontend SVEEP playlist section grouped by yatra step.',
+  },
+  {
+    id: 'cloud-tts',
+    serviceName: 'Scheduled-language read-aloud',
+    googleProduct: 'Cloud Text-to-Speech',
+    category: 'voice-language',
+    status: 'implemented',
+    userValue: 'Reads guidance aloud for seniors, low-literacy users, and community classes.',
+    codePaths: ['packages/core/src/google/ttsClient.ts', 'apps/functions/src/routes/tts.ts'],
+    apiSurfaces: ['POST /api/tts'],
+    browserSurfaces: ['/easy-mode', '/pwd', '/yatra'],
+    envVars: ['GOOGLE_API_KEY', 'GOOGLE_APPLICATION_CREDENTIALS'],
+    fallbackMode: 'browser SpeechSynthesis plus visible transcript',
+    evidenceSignals: ['22 scheduled-language presets', 'TTS request draft tests'],
+    nextStep: 'Cache synthesized audio by text hash and locale.',
+  },
+  {
+    id: 'speech-to-text',
+    serviceName: 'Voice question input',
+    googleProduct: 'Cloud Speech-to-Text',
+    category: 'voice-language',
+    status: 'ready-with-key',
+    userValue: 'Lets voters ask questions or paste forwards by voice.',
+    codePaths: ['packages/core/src/google/sttClient.ts'],
+    apiSurfaces: ['planned POST /api/stt'],
+    browserSurfaces: ['/clinic', 'global Chunav Saathi chat'],
+    envVars: ['GOOGLE_API_KEY', 'GOOGLE_APPLICATION_CREDENTIALS'],
+    fallbackMode: 'manual text input remains available',
+    evidenceSignals: ['typed SpeechClient wrapper', 'voice-input accessibility blueprint'],
+    nextStep: 'Add multipart upload route and mic permission UI.',
+  },
+  {
+    id: 'cloud-translation',
+    serviceName: 'Language fallback and detection',
+    googleProduct: 'Cloud Translation',
+    category: 'voice-language',
+    status: 'implemented',
+    userValue: 'Translates guidance and detects user language for inclusive replies.',
+    codePaths: [
+      'packages/core/src/google/translationClient.ts',
+      'apps/functions/src/routes/translate.ts',
+    ],
+    apiSurfaces: ['POST /api/translate', 'POST /api/translate/detect'],
+    browserSurfaces: ['/easy-mode', '/yatra'],
+    envVars: ['GOOGLE_API_KEY', 'GOOGLE_APPLICATION_CREDENTIALS'],
+    fallbackMode: 'prewritten scheduled-language transcripts',
+    evidenceSignals: ['supportedLocales public config', 'translation route validation tests'],
+    nextStep: 'Add phrase cache for static civic strings.',
+  },
+  {
+    id: 'firebase-auth',
+    serviceName: 'Optional voter progress login',
+    googleProduct: 'Firebase Authentication',
+    category: 'identity-data',
+    status: 'planned',
+    userValue: 'Syncs progress across devices without asking for voter identity documents.',
+    codePaths: ['packages/core/src/google/firebaseAdmin.ts'],
+    apiSurfaces: ['planned auth middleware'],
+    browserSurfaces: ['/play', '/leaderboard'],
+    envVars: ['FIREBASE_PROJECT_ID', 'GOOGLE_APPLICATION_CREDENTIALS'],
+    fallbackMode: 'localStorage progress ledger',
+    evidenceSignals: ['Firebase admin lazy init handle', 'privacy-preserving progress docs'],
+    nextStep: 'Add anonymous/sign-in auth gate for cross-device XP sync.',
+  },
+  {
+    id: 'firestore',
+    serviceName: 'Progress, history, and leaderboard storage',
+    googleProduct: 'Cloud Firestore',
+    category: 'identity-data',
+    status: 'planned',
+    userValue: 'Persists quizzes, badges, clinic history, and classroom progress.',
+    codePaths: ['packages/core/src/google/firebaseAdmin.ts'],
+    apiSurfaces: ['planned /api/quiz/*', 'planned /api/leaderboard/*'],
+    browserSurfaces: ['/play', '/clinic/history', '/leaderboard'],
+    envVars: ['FIREBASE_PROJECT_ID', 'GOOGLE_APPLICATION_CREDENTIALS'],
+    fallbackMode: 'localStorage-only progress',
+    evidenceSignals: ['typed UserProgress schema', 'leaderboard task tracker entries'],
+    nextStep: 'Add Firestore repository with security-rule test fixtures.',
+  },
+  {
+    id: 'firebase-hosting',
+    serviceName: 'Static web edge deploy option',
+    googleProduct: 'Firebase Hosting',
+    category: 'cloud-platform',
+    status: 'planned',
+    userValue: 'Offers fast static delivery for public civic pages.',
+    codePaths: ['tasks.md', 'GOOGLE_SERVICES.md'],
+    apiSurfaces: ['planned hosting channel deploy'],
+    browserSurfaces: ['public static pages'],
+    envVars: ['FIREBASE_PROJECT_ID'],
+    fallbackMode: 'Cloud Run web service remains active',
+    evidenceSignals: ['deployment backlog item'],
+    nextStep: 'Add firebase.json only when Hosting is chosen for final delivery.',
+  },
+  {
+    id: 'recaptcha-enterprise',
+    serviceName: 'Abuse protection for AI routes',
+    googleProduct: 'reCAPTCHA Enterprise',
+    category: 'security',
+    status: 'implemented',
+    userValue: 'Protects Forward Clinic from scripted abuse while preserving judge demo access.',
+    codePaths: [
+      'packages/core/src/google/recaptchaClient.ts',
+      'apps/functions/src/routes/forward.ts',
+    ],
+    apiSurfaces: ['POST /api/forward/analysis'],
+    browserSurfaces: ['/clinic'],
+    envVars: ['RECAPTCHA_PROJECT_ID', 'RECAPTCHA_SITE_KEY', 'RECAPTCHA_API_KEY'],
+    fallbackMode: 'origin-scoped demo bypass for the hackathon URL',
+    evidenceSignals: ['bypass allowed-origin tests', 'public config site-key only'],
+    nextStep: 'Turn bypass off when production site key is wired.',
+  },
+  {
+    id: 'secret-manager',
+    serviceName: 'Server-only secret storage',
+    googleProduct: 'Secret Manager',
+    category: 'security',
+    status: 'implemented',
+    userValue: 'Keeps LLM and Google keys out of browser bundles and committed files.',
+    codePaths: ['AGENTS.md', 'apps/functions/src/config.ts'],
+    apiSurfaces: ['Cloud Run env and secret injection'],
+    browserSurfaces: [],
+    envVars: ['LLM_SERVICE_INTERNAL_KEY', 'GOOGLE_API_KEY', 'GOOGLE_MAPS_API_KEY'],
+    fallbackMode: 'empty dev values produce typed missing-config responses',
+    evidenceSignals: ['Cloud Run --set-secrets command', 'public config secret-redaction test'],
+    nextStep: 'Add typed Secret Manager lazy-fetch helper for non-Cloud Run contexts.',
+  },
+  {
+    id: 'cloud-run-api',
+    serviceName: 'Backend container runtime',
+    googleProduct: 'Cloud Run',
+    category: 'cloud-platform',
+    status: 'implemented',
+    userValue: 'Serves scalable API routes for AI, maps, voice, security, and config.',
+    codePaths: ['cloudbuild-api.yaml', 'apps/functions/src/server.ts', 'AGENTS.md'],
+    apiSurfaces: ['https://electnation-api-767171449038.us-central1.run.app'],
+    browserSurfaces: ['/clinic', '/map', '/easy-mode', '/yatra'],
+    envVars: ['PORT', 'ALLOWED_ORIGINS', 'LLM_SERVICE_*'],
+    fallbackMode: 'local Express dev server on port 8080',
+    evidenceSignals: ['health endpoint version', 'deployment runbook'],
+    nextStep: 'Add Cloud Monitoring uptime check after custom domain is ready.',
+  },
+  {
+    id: 'cloud-run-web',
+    serviceName: 'Next.js web runtime',
+    googleProduct: 'Cloud Run',
+    category: 'cloud-platform',
+    status: 'implemented',
+    userValue: 'Hosts the interactive voter-facing experience for judges and users.',
+    codePaths: ['cloudbuild-web.yaml', 'apps/web/Dockerfile', 'AGENTS.md'],
+    apiSurfaces: ['https://electnation-web-767171449038.us-central1.run.app'],
+    browserSurfaces: ['all public routes'],
+    envVars: ['NEXT_PUBLIC_API_BASE_URL', 'NEXT_STANDALONE'],
+    fallbackMode: 'local Next dev server on port 3000',
+    evidenceSignals: ['stable Cloud Run URL', 'browser E2E route checks'],
+    nextStep: 'Add Firebase Hosting or custom domain front door if required.',
+  },
+  {
+    id: 'cloud-build',
+    serviceName: 'Reproducible image builds',
+    googleProduct: 'Cloud Build',
+    category: 'cloud-platform',
+    status: 'implemented',
+    userValue: 'Builds API and web images consistently for final deployment.',
+    codePaths: ['cloudbuild-api.yaml', 'cloudbuild-web.yaml', '.gcloudignore'],
+    apiSurfaces: ['gcloud builds submit'],
+    browserSurfaces: [],
+    envVars: ['GOOGLE_CLOUD_PROJECT'],
+    fallbackMode: 'local pnpm build for validation',
+    evidenceSignals: ['documented build commands', 'Cloud Run revision notes'],
+    nextStep: 'Add build substitutions for branch/release metadata.',
+  },
+  {
+    id: 'cloud-logging',
+    serviceName: 'Structured API logs',
+    googleProduct: 'Cloud Logging',
+    category: 'analytics-ops',
+    status: 'implemented',
+    userValue: 'Tracks safe operational events without raw PII.',
+    codePaths: ['apps/functions/src/middleware/logger.ts'],
+    apiSurfaces: ['JSON stdout for Cloud Run'],
+    browserSurfaces: [],
+    envVars: [],
+    fallbackMode: 'local console JSON logs',
+    evidenceSignals: ['metadata-only logging', 'safe error sanitization tests'],
+    nextStep: 'Add log-based metrics for clinic scans and fallback modes.',
+  },
+  {
+    id: 'cloud-monitoring',
+    serviceName: 'Health and uptime monitoring',
+    googleProduct: 'Cloud Monitoring',
+    category: 'analytics-ops',
+    status: 'planned',
+    userValue: 'Alerts maintainers if AI, map, or web flows degrade before judging.',
+    codePaths: ['apps/functions/src/routes/health.ts'],
+    apiSurfaces: ['GET /api/health'],
+    browserSurfaces: [],
+    envVars: ['GOOGLE_CLOUD_PROJECT'],
+    fallbackMode: 'manual health curl in AGENTS.md',
+    evidenceSignals: ['dependency readiness in health payload'],
+    nextStep: 'Create uptime check and alert policy in deployment docs.',
+  },
+  {
+    id: 'error-reporting',
+    serviceName: 'Production exception grouping',
+    googleProduct: 'Error Reporting',
+    category: 'analytics-ops',
+    status: 'planned',
+    userValue: 'Groups backend errors without exposing them to users.',
+    codePaths: ['apps/functions/src/middleware/logger.ts'],
+    apiSurfaces: ['Cloud Run stderr'],
+    browserSurfaces: [],
+    envVars: ['GOOGLE_CLOUD_PROJECT'],
+    fallbackMode: 'safe JSON error responses and local logs',
+    evidenceSignals: ['sanitized error logging helper'],
+    nextStep: 'Add Error Reporting source mapping after release build stabilization.',
+  },
+  {
+    id: 'cloud-trace',
+    serviceName: 'Latency tracing for AI and map calls',
+    googleProduct: 'Cloud Trace',
+    category: 'analytics-ops',
+    status: 'planned',
+    userValue: 'Explains where slow AI/map requests spend time.',
+    codePaths: ['apps/functions/src/routes/chat.ts', 'apps/functions/src/routes/map.ts'],
+    apiSurfaces: ['planned OpenTelemetry spans'],
+    browserSurfaces: [],
+    envVars: ['GOOGLE_CLOUD_PROJECT'],
+    fallbackMode: 'latencyMs metadata in route logs',
+    evidenceSignals: ['latency logging on Forward Clinic'],
+    nextStep: 'Add OpenTelemetry console exporter for dev and Cloud Trace exporter for prod.',
+  },
+  {
+    id: 'cloud-scheduler',
+    serviceName: 'Weekly leaderboard and reminder jobs',
+    googleProduct: 'Cloud Scheduler',
+    category: 'cloud-platform',
+    status: 'planned',
+    userValue: 'Automates weekly community challenges and reminder refreshes.',
+    codePaths: ['tasks.md'],
+    apiSurfaces: ['planned cron -> /api/jobs/*'],
+    browserSurfaces: ['/leaderboard'],
+    envVars: ['GOOGLE_CLOUD_PROJECT'],
+    fallbackMode: 'manual local reset during demo',
+    evidenceSignals: ['leaderboard weekly reset task'],
+    nextStep: 'Add authenticated job endpoint and Scheduler command docs.',
+  },
+  {
+    id: 'pubsub',
+    serviceName: 'Async civic-event processing',
+    googleProduct: 'Pub/Sub',
+    category: 'cloud-platform',
+    status: 'planned',
+    userValue: 'Queues analytics, moderation, and notification work without slowing the UI.',
+    codePaths: ['packages/core/src/google/serviceCatalog.ts'],
+    apiSurfaces: ['planned topic election-yatra-events'],
+    browserSurfaces: [],
+    envVars: ['GOOGLE_CLOUD_PROJECT'],
+    fallbackMode: 'synchronous route responses',
+    evidenceSignals: ['explicit event-processing slot'],
+    nextStep: 'Add typed event publisher once Firestore/analytics are active.',
+  },
+  {
+    id: 'cloud-tasks',
+    serviceName: 'Deferred heavy jobs',
+    googleProduct: 'Cloud Tasks',
+    category: 'cloud-platform',
+    status: 'planned',
+    userValue: 'Defers long-running synthesis, share-card, or report jobs.',
+    codePaths: ['packages/core/src/google/serviceCatalog.ts'],
+    apiSurfaces: ['planned /api/jobs/task-callback'],
+    browserSurfaces: ['/easy-mode', '/play'],
+    envVars: ['GOOGLE_CLOUD_PROJECT'],
+    fallbackMode: 'inline demo processing',
+    evidenceSignals: ['job queue contract in catalog'],
+    nextStep: 'Add signed task callback validation before enabling queue dispatch.',
+  },
+  {
+    id: 'cloud-storage',
+    serviceName: 'Generated civic media storage',
+    googleProduct: 'Cloud Storage',
+    category: 'civic-media',
+    status: 'planned',
+    userValue: 'Stores share cards, offline packets, and classroom facilitator decks.',
+    codePaths: ['packages/core/src/accessibility.ts', 'packages/core/src/google/serviceCatalog.ts'],
+    apiSurfaces: ['planned /api/share-card'],
+    browserSurfaces: ['/play', '/easy-mode'],
+    envVars: ['GOOGLE_CLOUD_PROJECT', 'GOOGLE_STORAGE_BUCKET'],
+    fallbackMode: 'client-side local download',
+    evidenceSignals: ['offline accessibility packet helper'],
+    nextStep: 'Add signed upload/download URL helper.',
+  },
+  {
+    id: 'bigquery',
+    serviceName: 'Anonymous impact analytics warehouse',
+    googleProduct: 'BigQuery',
+    category: 'analytics-ops',
+    status: 'planned',
+    userValue: 'Measures civic learning outcomes without storing voter IDs.',
+    codePaths: ['packages/core/src/google/serviceCatalog.ts'],
+    apiSurfaces: ['planned analytics export job'],
+    browserSurfaces: [],
+    envVars: ['GOOGLE_CLOUD_PROJECT', 'BIGQUERY_DATASET'],
+    fallbackMode: 'local and Cloud Logging event counts',
+    evidenceSignals: ['anonymous analytics task in roadmap'],
+    nextStep: 'Define privacy-safe event schema before exporting.',
+  },
+  {
+    id: 'ga4',
+    serviceName: 'Funnel and adoption analytics',
+    googleProduct: 'Google Analytics 4',
+    category: 'analytics-ops',
+    status: 'planned',
+    userValue: 'Shows where voters complete onboarding, clinic scans, and scenarios.',
+    codePaths: ['tasks.md', 'GOOGLE_SERVICES.md'],
+    apiSurfaces: ['planned GA4 Measurement Protocol'],
+    browserSurfaces: ['all public routes'],
+    envVars: ['GA4_MEASUREMENT_ID', 'GA4_API_SECRET'],
+    fallbackMode: 'no analytics in privacy-first demo',
+    evidenceSignals: ['analytics funnel proof backlog item'],
+    nextStep: 'Add consent-aware analytics client with anonymous event names.',
+  },
+];
+
+const CIVIC_JOURNEY: GoogleCivicJourneyStep[] = [
+  {
+    id: 'ask',
+    label: 'Ask',
+    userMoment: 'A voter asks how registration, EPIC verification, or poll day works.',
+    googleServiceIds: ['antigravity-gemini-chat', 'cloud-translation', 'cloud-tts'],
+    proof: 'Chunav Saathi streams neutral answers and Easy Mode can read them aloud.',
+  },
+  {
+    id: 'verify',
+    label: 'Verify',
+    userMoment: 'A family WhatsApp forward claims EVMs are hacked or voting is unsafe.',
+    googleServiceIds: [
+      'antigravity-gemini-forward-clinic',
+      'recaptcha-enterprise',
+      'cloud-logging',
+    ],
+    proof:
+      'Forward Clinic validates, classifies, filters official sources, and protects the route.',
+  },
+  {
+    id: 'locate',
+    label: 'Locate',
+    userMoment: 'A voter needs booth, ERO, route, and travel context.',
+    googleServiceIds: [
+      'maps-javascript',
+      'geocoding',
+      'distance-matrix',
+      'places-new',
+      'directions-api',
+    ],
+    proof: 'Map page renders a map/fallback and backend exposes typed map distance contracts.',
+  },
+  {
+    id: 'remember',
+    label: 'Remember',
+    userMoment: 'A voter wants deadline and poll-day reminders.',
+    googleServiceIds: ['calendar-template', 'time-zone-api'],
+    proof: 'Calendar route creates Google Calendar template links and ICS fallback.',
+  },
+  {
+    id: 'learn',
+    label: 'Learn',
+    userMoment: 'A classroom or family group wants official civic learning media.',
+    googleServiceIds: ['youtube-sveep', 'cloud-storage', 'firebase-hosting'],
+    proof: 'SVEEP endpoint has YouTube Data API integration with curated fallback.',
+  },
+  {
+    id: 'persist',
+    label: 'Persist',
+    userMoment: 'A user wants progress, badges, and preferences to follow them across devices.',
+    googleServiceIds: ['firebase-auth', 'firestore', 'secret-manager'],
+    proof:
+      'Local progress exists now; Firebase admin and security-ready env contracts are in place.',
+  },
+  {
+    id: 'operate',
+    label: 'Operate',
+    userMoment: 'The team deploys, observes, and improves the app during judging.',
+    googleServiceIds: [
+      'cloud-run-api',
+      'cloud-run-web',
+      'cloud-build',
+      'cloud-monitoring',
+      'bigquery',
+    ],
+    proof: 'Cloud Run, Cloud Build, health checks, and structured logs are the deployed backbone.',
+  },
+];
+
+export const getGoogleServiceCatalog = (): GoogleServiceIntegration[] =>
+  GOOGLE_SERVICE_CATALOG.map((service) => ({
+    ...service,
+    codePaths: [...service.codePaths],
+    apiSurfaces: [...service.apiSurfaces],
+    browserSurfaces: [...service.browserSurfaces],
+    envVars: [...service.envVars],
+    evidenceSignals: [...service.evidenceSignals],
+  }));
+
+export const getGoogleCivicJourney = (): GoogleCivicJourneyStep[] =>
+  CIVIC_JOURNEY.map((step) => ({ ...step, googleServiceIds: [...step.googleServiceIds] }));
+
+export const getGoogleServiceById = (id: string): GoogleServiceIntegration | undefined =>
+  getGoogleServiceCatalog().find((service) => service.id === id);
+
+export const getGoogleServiceScorecard = (): GoogleServiceScorecard => {
+  const catalog = getGoogleServiceCatalog();
+  const uniqueCategories = [...new Set(catalog.map((service) => service.category))].sort();
+  const productFamilies = new Set(catalog.map((service) => service.googleProduct)).size;
+
+  return {
+    totalServices: catalog.length,
+    implemented: catalog.filter((service) => service.status === 'implemented').length,
+    readyWithKey: catalog.filter((service) => service.status === 'ready-with-key').length,
+    planned: catalog.filter((service) => service.status === 'planned').length,
+    categories: uniqueCategories,
+    productFamilies,
+    backendRoutes: new Set(
+      catalog
+        .flatMap((service) => service.apiSurfaces)
+        .filter((surface) => surface.startsWith('GET ') || surface.startsWith('POST ')),
+    ).size,
+    browserSurfaces: new Set(catalog.flatMap((service) => service.browserSurfaces)).size,
+    codePathReferences: new Set(catalog.flatMap((service) => service.codePaths)).size,
+    judgeProofPoints: [
+      'Backend-only Gemini/llm-service calls for chat and misinformation analysis.',
+      'Maps, Calendar, YouTube, TTS, Translation, reCAPTCHA, Cloud Run, Cloud Build, and Secret Manager have inspectable code paths.',
+      'Every unkeyed service is labelled ready-with-key or planned with an explicit fallback mode.',
+      'Public config exposes counts and flags, not server-only secret values.',
+    ],
+  };
+};
+
+export const getGoogleServicesPublicSummary = () => {
+  const scorecard = getGoogleServiceScorecard();
+  return {
+    totalServices: scorecard.totalServices,
+    implemented: scorecard.implemented,
+    readyWithKey: scorecard.readyWithKey,
+    planned: scorecard.planned,
+    categories: scorecard.categories,
+    productFamilies: scorecard.productFamilies,
+    backendRoutes: scorecard.backendRoutes,
+    browserSurfaces: scorecard.browserSurfaces,
+  };
+};

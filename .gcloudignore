@@ -1,0 +1,31 @@
+# Keep Cloud Build source uploads small and free of local secrets/artifacts.
+.git
+.gitignore
+.gcloudignore
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+
+# Local dependencies and build output
+node_modules/
+**/node_modules/
+.next/
+**/.next/
+dist/
+**/dist/
+coverage/
+**/coverage/
+
+# Local CLI artifacts not needed inside Cloud Build images
+gh.zip
+bin/gh.exe
+
+# Ignored research/session material
+docs/
+
+# Editor and local metadata
+.idea/
+.DS_Store
+Thumbs.db

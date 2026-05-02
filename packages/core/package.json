@@ -1,0 +1,34 @@
+{
+  "name": "@yatra/core",
+  "version": "0.5.1",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./accessibility": "./dist/accessibility.js",
+    "./types": "./dist/types/index.js",
+    "./schemas": "./dist/schemas/index.js",
+    "./google": "./dist/google/index.js",
+    "./result": "./dist/result.js",
+    "./errors": "./dist/errors.js"
+  },
+  "scripts": {
+    "type-check": "tsc --noEmit",
+    "build": "tsc",
+    "test": "vitest run",
+    "lint": "eslint src"
+  },
+  "dependencies": {
+    "@google-cloud/speech": "^7.3.0",
+    "@google-cloud/text-to-speech": "^6.4.0",
+    "@google-cloud/translate": "^9.3.0",
+    "googleapis": "^171.4.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5",
+    "vitest": "^1.6.0"
+  }
+}
