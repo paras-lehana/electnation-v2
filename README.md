@@ -1,6 +1,6 @@
 # Election Yatra — Janta ka Election Saathi
 
-> **Version 0.5.1** — Google Civic Stack release with a typed service catalog, evaluator API, proof page, browser-tested evidence, and polished mobile navigation.
+> **Version 0.5.2** — Code quality and efficiency release with lazy chat loading, leaner dependencies, centralized API errors, and stronger API-client tests.
 
 > **An AI companion for Indian voters.** Walk the 6-station yatra from
 > registration to polling booth, spot WhatsApp misinformation, find your
@@ -40,6 +40,7 @@ election-yatra/
 ├── ARCHITECTURE.md    # Data flow + layering
 ├── GOOGLE_SERVICES.md # Service → file mapping
 ├── EVALUATION_MAPPING.md  # Rubric ↔ code mapping
+├── SUBMISSION_ARTIFACTS.md # Lean-repo policy for omitted generated/binary files
 ├── SECURITY.md
 ├── ACCESSIBILITY.md
 ├── TESTING.md
@@ -63,6 +64,16 @@ election-yatra/
 | `packages/core/src/google/serviceCatalog.ts`            | Typed catalog of implemented, key-ready, and planned Google service integrations, fallback modes, env contracts, and judge proof points               | Google Services evidence and roadmap               |
 | `tasks.md`                                              | Granular roadmap and code-quality hardening tracker                                                                                                   | Session planning and rubric progress               |
 | `EVALUATION_MAPPING.md`                                 | Rubric axis to proof mapping                                                                                                                          | Before submission review                           |
+| `SUBMISSION_ARTIFACTS.md`                                | Documents omitted binaries, archives, screenshots, and generated files with regeneration paths                                                        | Before final repo-size review                      |
+
+## Lean submission policy
+
+The submitted Git tree intentionally tracks only source, tests, configuration,
+and rubric evidence. Local helper binaries, archives, generated screenshots,
+dependency folders, build outputs, coverage, and Playwright reports are ignored
+or removed from tracking because they slow clone/build workflows without adding
+reviewable product logic. See `SUBMISSION_ARTIFACTS.md` for the exact omission
+list and regeneration notes.
 
 ## Local setup
 
@@ -92,7 +103,7 @@ Turn bypass off after wiring a production reCAPTCHA site key.
 
 ```bash
 curl http://localhost:8080/api/health
-# → 200 {"status":"degraded","version":"0.5.1",...}
+# → 200 {"status":"degraded","version":"0.5.2",...}
 
 curl -N -X POST http://localhost:8080/api/chat \
   -H "content-type: application/json" \

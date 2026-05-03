@@ -1,6 +1,6 @@
 {
   "name": "election-yatra",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "private": true,
   "description": "Election Yatra — Janta ka Election Saathi. An India-first civic education assistant powered by Gemini and Google Cloud.",
   "packageManager": "pnpm@9.0.0",

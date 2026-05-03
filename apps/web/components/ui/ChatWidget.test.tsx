@@ -2,9 +2,10 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { ChatWidget } from './ChatWidget';
-import { streamChatResponse } from '@/lib/apiClient';
+import { CHAT_STREAM_FALLBACK_MESSAGE, streamChatResponse } from '@/lib/apiClient';
 
 vi.mock('@/lib/apiClient', () => ({
+  CHAT_STREAM_FALLBACK_MESSAGE: 'Maaf karna, abhi main thoda busy hoon. Kripya baad mein try karein.',
   streamChatResponse: vi.fn(),
 }));
 
@@ -42,7 +43,7 @@ describe('ChatWidget', () => {
     await userEvent.type(screen.getByPlaceholderText(/ask a question/i), 'What is EPIC?');
     await userEvent.click(screen.getByRole('button', { name: /send question to chunav saathi/i }));
 
-    await waitFor(() => expect(screen.getByText(/maaf karna/i)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(CHAT_STREAM_FALLBACK_MESSAGE)).toBeInTheDocument());
     expect(consoleError).toHaveBeenCalled();
   });
 });

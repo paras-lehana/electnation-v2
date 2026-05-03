@@ -2,6 +2,27 @@
 
 All notable changes to Election Yatra.
 
+## [0.5.2] - 2026-05-03
+
+### Changed
+
+- Lazy-loaded the global Chunav Saathi widget so Framer Motion and chat-streaming code are split away from the initial route shell.
+- Removed the unused `next-intl` web dependency and refreshed the lockfile to reduce install surface and dependency graph weight.
+- Enabled explicit Next.js production efficiency settings for compression, hidden `X-Powered-By`, disabled browser source maps, package import optimization, and immutable static asset caching.
+- Centralized browser API response error handling and reused a single safe chat fallback message constant across the API client and chat UI.
+- Removed large local GitHub CLI artifacts from tracking, hardened `.gitignore` against generated/binary bloat, and documented omitted submission artifacts with regeneration notes.
+
+### Tested
+
+- Added API-client unit coverage for Forward Clinic JSON requests, typed server errors, generic HTTP errors, SSE parsing, streamed chat deltas, and fallback-message reuse.
+
+### Verified
+
+- `corepack pnpm@9.0.0 -C C:\Code\Hackathons\electnation install` passed and refreshed the local dependency install.
+- `npx -y pnpm@9.0.0 -C C:\Code\Hackathons\electnation type-check` passed across core, functions, and web.
+- `npx -y pnpm@9.0.0 -C C:\Code\Hackathons\electnation test` passed with 34 core tests, 31 functions/API tests, and 13 web tests.
+- `npx -y pnpm@9.0.0 -C C:\Code\Hackathons\electnation build` passed across core, functions, and web.
+
 ## [0.5.1] - 2026-05-03
 
 ### Fixed

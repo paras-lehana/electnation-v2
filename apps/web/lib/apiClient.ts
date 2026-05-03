@@ -36,6 +36,7 @@ interface ApiErrorPayload {
 
 const DEFAULT_API_BASE_URL = 'https://electnation-api-767171449038.us-central1.run.app';
 const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL ?? DEFAULT_API_BASE_URL).replace(/\/+$/, '');
+export const CHAT_STREAM_FALLBACK_MESSAGE = 'Maaf karna, abhi main thoda busy hoon. Kripya baad mein try karein.';
 
 export class ApiClientError extends Error {
   readonly status: number;
@@ -64,6 +65,12 @@ const readErrorMessage = async (response: Response): Promise<{ message: string; 
   }
 };
 
+const assertOkResponse = async (response: Response): Promise<void> => {
+  if (response.ok) return;
+
+  const error = await readErrorMessage(response);
+  throw new ApiClientError(error.message, response.status, error.code);
+};
 
 const postJson = async <ResponseBody>(path: string, body: unknown): Promise<ResponseBody> => {
   const response = await fetch(apiUrl(path), {
@@ -72,10 +79,7 @@ const postJson = async <ResponseBody>(path: string, body: unknown): Promise<Resp
     body: JSON.stringify(body),
   });
 
-  if (!response.ok) {
-    const error = await readErrorMessage(response);
-    throw new ApiClientError(error.message, response.status, error.code);
-  }
+  await assertOkResponse(response);
 
   return response.json() as Promise<ResponseBody>;
 };
@@ -146,10 +150,7 @@ export const streamChatResponse = async (
     body: JSON.stringify(request),
   });
 
-  if (!response.ok) {
-    const error = await readErrorMessage(response);
-    throw new ApiClientError(error.message, response.status, error.code);
-  }
+  await assertOkResponse(response);
 
   const reader = response.body?.getReader();
   if (!reader) throw new ApiClientError('Streaming response body is unavailable.', 0, 'STREAM_UNAVAILABLE');

@@ -1,6 +1,6 @@
 import { NavBar } from '@/components/layout/NavBar';
 import { Footer } from '@/components/layout/Footer';
-import { ChatWidget } from '@/components/ui/ChatWidget';
+import { ChatWidgetLoader } from '@/components/ui/ChatWidgetLoader';
 import type { Metadata, Viewport } from 'next';
 import { Noto_Serif_Devanagari, Playfair_Display, Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
@@ -70,7 +70,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <NavBar />
         <div className="flex-1 flex flex-col">{children}</div>
         <Footer />
-        <ChatWidget />
+        <ChatWidgetLoader />
       </body>
     </html>
   );

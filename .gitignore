@@ -1,6 +1,8 @@
 # Dependencies
 node_modules/
 .pnpm-store/
+.yarn/
+.pnp.*
 
 # Build outputs
 dist/
@@ -8,6 +10,10 @@ build/
 .next/
 out/
 *.tsbuildinfo
+.turbo/
+.vercel/
+.firebase/
+.cache/
 
 # Env & secrets
 .env
@@ -21,11 +27,24 @@ service-account*.json
 # Private design / research docs (NOT shipped in repo)
 docs/
 
+# Large local tools and submission-only artifacts
+bin/
+*.exe
+*.zip
+*.7z
+*.rar
+*.tar
+*.tar.gz
+*.tgz
+public/screenshots/submission/
+
 # Tool caches and local metadata
 .DS_Store
 .idea/
+.vscode/
 *.swp
 *.swo
+*.heapsnapshot
 
 # Test & coverage
 coverage/
@@ -37,6 +56,12 @@ test-results/
 *.log
 npm-debug.log*
 pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+firebase-debug.log*
+
+# Local scratch space
+tmp/
 
 # PWA
 public/sw.js

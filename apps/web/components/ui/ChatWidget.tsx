@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, type FormEvent, type KeyboardEvent } from 
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
 import { AshokaChakra } from '@/components/motifs/AshokaChakra';
-import { streamChatResponse } from '@/lib/apiClient';
+import { CHAT_STREAM_FALLBACK_MESSAGE, streamChatResponse } from '@/lib/apiClient';
 
 export function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
@@ -61,8 +61,8 @@ export function ChatWidget() {
     }
   };
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (event: FormEvent) => {
+    event.preventDefault();
     if (!input.trim() || isTyping) return;
 
     const userMsg = input.trim();
@@ -87,7 +87,7 @@ export function ChatWidget() {
       setMessages((prev) =>
         prev.map((message, index) =>
           index === prev.length - 1 && message.role === 'model'
-            ? { ...message, text: 'Maaf karna, abhi main thoda busy hoon. Kripya baad mein try karein.' }
+            ? { ...message, text: CHAT_STREAM_FALLBACK_MESSAGE }
             : message,
         ),
       );
@@ -143,21 +143,21 @@ export function ChatWidget() {
                 aria-label="Chunav Saathi conversation"
                 className="flex h-[400px] flex-col gap-3 overflow-y-auto bg-khadi-50 p-4"
               >
-                {messages.map((msg, i) => (
+                {messages.map((message, messageIndex) => (
                   <div
-                    key={i}
+                    key={messageIndex}
                     className={`flex ${
-                      msg.role === 'user' ? 'justify-end' : 'justify-start'
+                      message.role === 'user' ? 'justify-end' : 'justify-start'
                     }`}
                   >
                     <div
                       className={`max-w-[85%] rounded-2xl p-3 text-sm shadow-sm ${
-                        msg.role === 'user'
+                        message.role === 'user'
                           ? 'rounded-br-sm bg-leaf-500 text-white'
                           : 'rounded-bl-sm bg-white text-ink-900 border border-khadi-200'
                       }`}
                     >
-                      {msg.text || (msg.role === 'model' && isTyping && (
+                      {message.text || (message.role === 'model' && isTyping && (
                         <span className="flex gap-1">
                           <span className="animate-bounce">.</span>
                           <span className="animate-bounce delay-100">.</span>
